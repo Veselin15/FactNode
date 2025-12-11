@@ -3,7 +3,8 @@ from django.dispatch import receiver
 from django.db.models import F
 from .models import Vote, ReputationLog
 from .choices import VoteType, ReputationAction
-
+from notifications.models import Notification
+from notifications.choices import NotificationType
 
 # --- SIGNAL 1: Update Fact Counts ---
 @receiver(post_save, sender=Vote)
@@ -22,7 +23,6 @@ def update_fact_score(sender, instance, **kwargs):
     # Save only these specific fields to optimize performance
     fact.save(update_fields=['upvotes_count', 'downvotes_count'])
 
-
 # --- SIGNAL 2: Update Author Reputation ---
 @receiver(post_save, sender=Vote)
 def update_author_reputation(sender, instance, created, **kwargs):
@@ -37,29 +37,50 @@ def update_author_reputation(sender, instance, created, **kwargs):
 
     fact = instance.fact
     author = fact.author
-    profile = author.profile
+    profile = author.profile  # This fetches the current profile from DB
 
-    # Don't let users farm reputation by voting on their own facts!
     if instance.user == author:
         return
 
+    # 1. Calculate Score Change
     score_change = 0
-
-    # Define rules: +10 points for Upvote, -2 points for Downvote
     if instance.vote_type == VoteType.UPVOTE:
         score_change = 10
     elif instance.vote_type == VoteType.DOWNVOTE:
         score_change = -2
 
-    if score_change != 0:
-        # 1. Update the Profile Score atomically (using F expressions avoids race conditions)
-        profile.reputation_score = F('reputation_score') + score_change
-        profile.save()
+    if score_change == 0:
+        return
 
-        # 2. Create a Log entry for audit history
-        ReputationLog.objects.create(
-            user=author,
-            action=ReputationAction.VOTE_RECEIVED,
-            score_change=score_change,
-            related_fact=fact
+    # 2. Capture OLD Rank
+    # We use the property 'rank_title' which calculates based on 'reputation_score'
+    old_rank = profile.rank_title
+
+    # 3. Apply Update
+    # We cannot use F() expressions here easily if we want to compare ranks immediately in Python.
+    # We will update manually to check the new rank.
+    profile.reputation_score += score_change
+    profile.save()
+
+    # 4. Check NEW Rank
+    profile.refresh_from_db() # Reload to be safe
+    new_rank = profile.rank_title
+
+    # 5. Trigger Notification if Rank Changed
+    if old_rank != new_rank and score_change > 0:
+        # Only notify on promotion (score went up), not demotion
+        Notification.objects.create(
+            recipient=author,
+            type=NotificationType.RANK_UP,
+            title="Rank Up!",
+            message=f"Congratulations! You have reached the rank of {new_rank}.",
+            target=profile # Links to their own profile
         )
+
+    # 6. Log the change
+    ReputationLog.objects.create(
+        user=author,
+        action=ReputationAction.VOTE_RECEIVED,
+        score_change=score_change,
+        related_fact=fact
+    )
