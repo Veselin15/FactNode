@@ -1,0 +1,16 @@
+# Core Framework
+# Your settings.py mentions Django 6.0, but typically the latest stable is 5.x.
+# This ensures you get the latest version available.
+Django>=5.0
+
+# API Framework
+# Used in settings.py (INSTALLED_APPS) and throughout your views/serializers
+djangorestframework
+
+# Filtering
+# Used in facts/views.py (DjangoFilterBackend)
+django-filter
+
+# Image Processing
+# Required for models.ImageField used in accounts/models.py (Profile.avatar)
+Pillow

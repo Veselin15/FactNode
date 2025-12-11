@@ -10,9 +10,17 @@ User = get_user_model()
 
 class ReputationSystemTest(TestCase):
     def setUp(self):
-        # 1. Setup Users
-        self.author = User.objects.create_user(username='author', password='password')
-        self.voter = User.objects.create_user(username='voter', password='password')
+        # 1. Setup Users with UNIQUE emails
+        self.author = User.objects.create_user(
+            username='author',
+            email='author@test.com',
+            password='password'
+        )
+        self.voter = User.objects.create_user(
+            username='voter',
+            email='voter@test.com',
+            password='password'
+        )
 
         # 2. Setup Category & Fact
         self.category = Category.objects.create(name="Science")
