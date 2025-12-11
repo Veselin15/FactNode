@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
 
     path('api/facts/', include('facts.urls')),
+    path('api/notifications/', include('notifications.urls')),
 ]
 
 # (Keep the debug static file serving code at the bottom)

@@ -1,8 +1,11 @@
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from django.db.models import F
+from django.contrib.contenttypes.models import ContentType  # <--- Added
 from .models import Fact
 from .choices import FactStatus
+from notifications.models import Notification  # <--- Added
+from notifications.choices import NotificationType  # <--- Added
 
 
 # --- 1. Update Total Posted Count ---
@@ -46,7 +49,6 @@ def track_old_status(sender, instance, **kwargs):
     else:
         instance._old_status = None
 
-
 @receiver(post_save, sender=Fact)
 def update_approved_count(sender, instance, created, **kwargs):
     """
@@ -61,7 +63,13 @@ def update_approved_count(sender, instance, created, **kwargs):
         profile.facts_approved_count = F('facts_approved_count') + 1
         profile.save(update_fields=['facts_approved_count'])
 
-        # (Optional) Here you could also trigger a Notification: "Your fact was approved!"
+        Notification.objects.create(
+            recipient=instance.author,
+            type=NotificationType.FACT_APPROVED,
+            title="Fact Approved!",
+            message=f"Great job! Your fact '{instance.title}' has been approved and is now live.",
+            target=instance # Uses the GenericForeignKey automatically
+        )
 
     # Case B: Fact was APPROVED but is now REJECTED (or Drafted)
     elif old_status == FactStatus.APPROVED and new_status != FactStatus.APPROVED:
