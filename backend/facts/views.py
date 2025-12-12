@@ -39,11 +39,7 @@ class FactViewSet(viewsets.ModelViewSet):
 
         return queryset.select_related('author', 'category').prefetch_related('sources')
 
-    def perform_create(self, serializer):
-        """
-        When creating a fact, set the author to the current user.
-        """
-        serializer.save(author=self.request.user)
+    # --- DELETE THE perform_create METHOD THAT WAS HERE ---
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):

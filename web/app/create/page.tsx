@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { Category } from "@/types/fact";
 
 export default function CreateFactPage() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const router = useRouter();
 
   const [title, setTitle] = useState("");
@@ -32,16 +32,10 @@ export default function CreateFactPage() {
 
     setLoading(true);
 
-    // We use FormData because we are sending a file (Image)
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content", content);
-    formData.append("category_id", categoryId); // Backend expects ID, but let's check your serializer
-    // Actually, looking at your serializer, it expects "category" object or ID.
-    // Usually DRF expects "category" field to be the ID if it's a ForeignKey.
-    // Let's assume your backend filters map category_id or simply 'category'.
-    // Safe bet: send 'category' as the ID.
-    formData.append("category", categoryId);
+    formData.append("category_id", categoryId); // Matches the serializer field
 
     if (image) {
       formData.append("image", image);
@@ -52,8 +46,7 @@ export default function CreateFactPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // Note: Do NOT set 'Content-Type': 'multipart/form-data' manually.
-          // The browser sets it automatically with the correct boundary when using FormData.
+          // Note: Content-Type is auto-set by browser for FormData
         },
         body: formData,
       });
@@ -64,10 +57,10 @@ export default function CreateFactPage() {
       }
 
       router.push("/"); // Success! Go home.
-      router.refresh(); // Refresh the feed to see the new fact.
+      router.refresh();
 
     } catch (err) {
-      alert("Failed to post fact: " + err);
+      alert("Failed to post: " + err);
     } finally {
       setLoading(false);
     }
