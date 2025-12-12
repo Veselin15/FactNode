@@ -91,13 +91,9 @@ class Profile(models.Model):
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
-    """
-    Signal receiver that creates a Profile instance automatically
-    whenever a new CustomUser is created.
-    """
     if created:
-        Profile.objects.create(user=instance)
-
+        # get_or_create prevents the crash if the Admin already created it
+        Profile.objects.get_or_create(user=instance)
 
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
