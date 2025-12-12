@@ -1,11 +1,12 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import FactViewSet, CategoryViewSet
+from .views import FactViewSet, CategoryViewSet, ModerationViewSet
 
 # Create a router and register our viewsets with it.
 router = DefaultRouter()
 router.register(r'feed', FactViewSet, basename='fact')
 router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'moderation', ModerationViewSet, basename='moderation')
 
 # The API URLs are now determined automatically by the router.
 urlpatterns = [

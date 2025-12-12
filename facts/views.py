@@ -3,7 +3,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Fact, Category
 from .serializers import FactSerializer, CategorySerializer
 from .choices import FactStatus
-
+from .permissions import IsReputationModerator
 
 class FactViewSet(viewsets.ModelViewSet):
     """
@@ -50,3 +50,48 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+class ModerationViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Special Interface for High-Rank Users (Researchers+).
+    Shows a queue of facts waiting for approval.
+    """
+    serializer_class = FactSerializer
+    permission_classes = [IsReputationModerator]  # <--- Secure this endpoint!
+
+    def get_queryset(self):
+        # Show only facts that are waiting for review
+        return Fact.objects.filter(status=FactStatus.PENDING).order_by('created_at')
+
+    @action(detail=True, methods=['post'])
+    def approve(self, request, pk=None):
+        """
+        Endpoint: POST /api/facts/moderation/{id}/approve/
+        """
+        fact = self.get_object()
+        fact.status = FactStatus.APPROVED
+        fact.approved_by = request.user  # (Optional: if you add this field later)
+        fact.save()
+
+        # Note: Your signals.py will automatically trigger the
+        # "Fact Approved" notification here!
+
+        return Response({'status': 'Fact approved successfully'})
+
+    @action(detail=True, methods=['post'])
+    def reject(self, request, pk=None):
+        """
+        Endpoint: POST /api/facts/moderation/{id}/reject/
+        Body: {"reason": "Duplicate content"}
+        """
+        fact = self.get_object()
+        fact.status = FactStatus.REJECTED
+
+        # Save rejection reason if provided
+        reason = request.data.get('reason', '')
+        if reason:
+            fact.rejection_reason = reason
+
+        fact.save()
+        return Response({'status': 'Fact rejected'})
