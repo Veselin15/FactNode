@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -129,9 +130,22 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-    # Professional Pagination (10 items per page)
+    # Pagination (10 items per page)
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     # Standard filtering
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+
+    # --- NEW AUTHENTICATION CONFIG ---
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Short life for security
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),    # Long life for UX (2 weeks)
+    'ROTATE_REFRESH_TOKENS': True,                   # Security: Issue new refresh token on use
+    'BLACKLIST_AFTER_ROTATION': True,                # Security: Invalidates old refresh token
+    'AUTH_HEADER_TYPES': ('Bearer',),                # Standard header: "Authorization: Bearer <token>"
 }

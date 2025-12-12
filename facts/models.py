@@ -40,9 +40,13 @@ class Fact(models.Model):
     """
     title = models.CharField(max_length=200, help_text="A concise and catchy title")
     slug = models.SlugField(max_length=250, unique=True, blank=True)
-
-    # Using TextField for flexibility. Ideally, a RichTextField would be used in the future.
     content = models.TextField(help_text="Full description of the fact")
+    image = models.ImageField(
+        upload_to='fact_images/',
+        blank=True,
+        null=True,
+        help_text="Optional image to make the fact more engaging."
+    )
 
     # Relationships
     author = models.ForeignKey(

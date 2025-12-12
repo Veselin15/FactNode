@@ -6,6 +6,7 @@ Django>=5.0
 # API Framework
 # Used in settings.py (INSTALLED_APPS) and throughout your views/serializers
 djangorestframework
+djangorestframework-simplejwt>=5.3.0
 
 # Filtering
 # Used in facts/views.py (DjangoFilterBackend)

@@ -42,10 +42,12 @@ class FactSerializer(serializers.ModelSerializer):
     # Custom field: Score calculation
     score = serializers.IntegerField(read_only=True)
 
+    image = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = Fact
         fields = [
-            'id', 'title', 'slug', 'content',
+            'id', 'title', 'slug', 'content', 'image',
             'category', 'author', 'sources',
             'score', 'created_at', 'status'
         ]
