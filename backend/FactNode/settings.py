@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'facts.apps.FactsConfig',
     'reputation.apps.ReputationConfig',
     'notifications.apps.NotificationsConfig',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'FactNode.urls'
@@ -144,8 +146,26 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),  # Short life for security
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),    # Long life for UX (2 weeks)
-    'ROTATE_REFRESH_TOKENS': True,                   # Security: Issue new refresh token on use
-    'BLACKLIST_AFTER_ROTATION': True,                # Security: Invalidates old refresh token
-    'AUTH_HEADER_TYPES': ('Bearer',),                # Standard header: "Authorization: Bearer <token>"
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),  # Long life for UX (2 weeks)
+    'ROTATE_REFRESH_TOKENS': True,  # Security: Issue new refresh token on use
+    'BLACKLIST_AFTER_ROTATION': True,  # Security: Invalidates old refresh token
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Standard header: "Authorization: Bearer <token>"
 }
+
+# --- CORS CONFIGURATION ---
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Next.js (Web)
+    "http://127.0.0.1:3000",
+]
+# Allow authentication headers (needed for JWT)
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
