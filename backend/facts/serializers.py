@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Fact, Category, FactSource
 from accounts.models import CustomUser
-
+from reputation.models import Vote
 
 # --- Helper Serializer for Author ---
 class AuthorSerializer(serializers.ModelSerializer):
@@ -49,15 +49,27 @@ class FactSerializer(serializers.ModelSerializer):
     score = serializers.IntegerField(read_only=True)
 
     image = serializers.ImageField(required=False, allow_null=True)
+    user_vote = serializers.SerializerMethodField()
 
     class Meta:
         model = Fact
         fields = [
             'id', 'title', 'slug', 'content', 'image',
             'category', 'category_id','author', 'sources',
-            'score', 'created_at', 'status'
+            'score','user_vote', 'created_at', 'status'
         ]
         read_only_fields = ['status', 'slug', 'approved_at', 'created_at']
+
+    def get_user_vote(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            # Efficiently check if THIS user voted on THIS fact
+            try:
+                vote = Vote.objects.get(user=user, fact=obj)
+                return vote.vote_type
+            except Vote.DoesNotExist:
+                return None
+        return None
 
     def create(self, validated_data):
         """

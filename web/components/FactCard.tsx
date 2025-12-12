@@ -10,19 +10,32 @@ interface FactCardProps {
 
 export default function FactCard({ fact }: FactCardProps) {
   const { token } = useAuth();
+
   const [score, setScore] = useState(fact.score);
-  // Simple state to prevent spamming votes locally
-  const [voteStatus, setVoteStatus] = useState<"up" | "down" | null>(null);
+
+  // Initialize state based on what the server told us!
+  const [voteStatus, setVoteStatus] = useState<"UP" | "DOWN" | null>(fact.user_vote);
 
   const handleVote = async (type: "UP" | "DOWN") => {
     if (!token) return alert("Please login to vote!");
 
-    // 1. Optimistic UI Update (Instant feedback)
-    const change = type === "UP" ? 1 : -1;
-    setScore((prev) => prev + change);
-    setVoteStatus(type === "UP" ? "up" : "down");
+    // Prevent double voting (optional, but good UX)
+    if (voteStatus === type) return;
 
-    // 2. API Call
+    // Logic to calculate score change visually
+    // If neutral -> Up: +1
+    // If Down -> Up: +2
+    let change = 0;
+    if (voteStatus === null) {
+      change = type === "UP" ? 1 : -1;
+    } else if (voteStatus !== type) {
+      change = type === "UP" ? 2 : -2;
+    }
+
+    // Optimistic Update
+    setScore((prev) => prev + change);
+    setVoteStatus(type);
+
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/reputation/votes/${fact.id}/cast_vote/`, {
         method: "POST",
@@ -35,9 +48,9 @@ export default function FactCard({ fact }: FactCardProps) {
 
       if (!res.ok) throw new Error();
     } catch (err) {
-      // Revert on error
+      // Revert if failed
       setScore((prev) => prev - change);
-      setVoteStatus(null);
+      setVoteStatus(fact.user_vote); // Reset to original
       alert("Vote failed. Please try again.");
     }
   };
@@ -48,7 +61,7 @@ export default function FactCard({ fact }: FactCardProps) {
       {/* Image Header */}
       {fact.image && (
         <div className="h-56 w-full relative overflow-hidden bg-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={fact.image}
             alt={fact.title}
@@ -61,7 +74,6 @@ export default function FactCard({ fact }: FactCardProps) {
       )}
 
       <div className="p-5">
-        {/* Author Header (if no image, show category here) */}
         {!fact.image && (
           <div className="flex justify-between items-center mb-3">
             <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
@@ -78,7 +90,6 @@ export default function FactCard({ fact }: FactCardProps) {
           {fact.content}
         </p>
 
-        {/* Footer: User & Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-50">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">
@@ -99,7 +110,7 @@ export default function FactCard({ fact }: FactCardProps) {
             <button
               onClick={() => handleVote("UP")}
               className={`p-1.5 rounded-md transition ${
-                voteStatus === "up" ? "bg-orange-100 text-orange-600" : "hover:bg-gray-200 text-gray-500"
+                voteStatus === "UP" ? "bg-orange-100 text-orange-600" : "hover:bg-gray-200 text-gray-500"
               }`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -116,7 +127,7 @@ export default function FactCard({ fact }: FactCardProps) {
             <button
               onClick={() => handleVote("DOWN")}
               className={`p-1.5 rounded-md transition ${
-                voteStatus === "down" ? "bg-blue-100 text-blue-600" : "hover:bg-gray-200 text-gray-500"
+                voteStatus === "DOWN" ? "bg-blue-100 text-blue-600" : "hover:bg-gray-200 text-gray-500"
               }`}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

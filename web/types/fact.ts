@@ -1,3 +1,4 @@
+
 export interface Author {
   username: string;
   is_verified: boolean;
@@ -16,8 +17,10 @@ export interface Fact {
   author: Author;
   category: Category;
   score: number;
+  user_vote: "UP" | "DOWN" | null; // <--- The new field
   created_at: string;
 }
+
 export interface PaginatedResponse {
   count: number;
   next: string | null;
