@@ -52,7 +52,7 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
+    pagination_class = None  # <--- ADD THIS LINE
 
 class ModerationViewSet(viewsets.ReadOnlyModelViewSet):
     """

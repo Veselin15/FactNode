@@ -36,6 +36,12 @@ class FactSerializer(serializers.ModelSerializer):
     Uses nested serializers for rich data presentation.
     """
     category = CategorySerializer(read_only=True)
+    # WRITE ONLY: Accept an ID in POST requests
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source='category',  # Link this input to the 'category' model field
+        write_only=True
+    )
     author = AuthorSerializer(read_only=True)
     sources = FactSourceSerializer(many=True, read_only=True)
 
@@ -48,7 +54,7 @@ class FactSerializer(serializers.ModelSerializer):
         model = Fact
         fields = [
             'id', 'title', 'slug', 'content', 'image',
-            'category', 'author', 'sources',
+            'category', 'category_id','author', 'sources',
             'score', 'created_at', 'status'
         ]
         read_only_fields = ['status', 'slug', 'approved_at', 'created_at']
