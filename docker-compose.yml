@@ -21,14 +21,15 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # Sync the web folder for hot reloading
       - ./web:/app
-      # IMPORTANT: Prevent host node_modules from overriding container ones
       - /app/node_modules
     environment:
-      # This allows Next.js to find the backend inside the docker network if doing SSR
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - WATCHPACK_POLLING=true
+    # --- ADD THIS LINE ---
+    # This explicitly forces Webpack, ignoring whatever is in package.json
+    command: npx next dev --webpack
+    # ---------------------
     depends_on:
       - backend
     restart: unless-stopped

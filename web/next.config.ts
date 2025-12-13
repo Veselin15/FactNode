@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 1. Allow images from Django
   images: {
     remotePatterns: [
       {
@@ -10,6 +11,15 @@ const nextConfig: NextConfig = {
         pathname: '/media/**',
       },
     ],
+  },
+
+  // 2. Force Polling for Docker on Windows
+  webpack: (config) => {
+    config.watchOptions = {
+      poll: 1000,   // Check for changes every second
+      aggregateTimeout: 300,
+    };
+    return config;
   },
 };
 
