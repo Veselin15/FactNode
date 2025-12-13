@@ -1,0 +1,33 @@
+services:
+  # --- The Backend Service (Django) ---
+  backend:
+    build: ./backend
+    container_name: factnode-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Sync the backend folder so code changes reload automatically
+      - ./backend:/app
+    # Ensure standard Django/Python outputs are visible
+    environment:
+      - DEBUG=1
+    # Keep the DB file on your host machine so data persists
+    restart: unless-stopped
+
+  # --- The Frontend Service (Next.js) ---
+  web:
+    build: ./web
+    container_name: factnode-web
+    ports:
+      - "3000:3000"
+    volumes:
+      # Sync the web folder for hot reloading
+      - ./web:/app
+      # IMPORTANT: Prevent host node_modules from overriding container ones
+      - /app/node_modules
+    environment:
+      # This allows Next.js to find the backend inside the docker network if doing SSR
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
