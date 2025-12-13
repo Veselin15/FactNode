@@ -28,6 +28,7 @@ services:
     environment:
       # This allows Next.js to find the backend inside the docker network if doing SSR
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - WATCHPACK_POLLING=true
     depends_on:
       - backend
     restart: unless-stopped
