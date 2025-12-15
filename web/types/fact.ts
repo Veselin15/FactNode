@@ -19,6 +19,7 @@ export interface Fact {
   score: number;
   user_vote: "UP" | "DOWN" | null; // <--- The new field
   created_at: string;
+  is_bookmarked: boolean;
 }
 
 export interface PaginatedResponse {
