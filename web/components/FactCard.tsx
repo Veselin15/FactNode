@@ -28,7 +28,7 @@ export default function FactCard({fact}: FactCardProps) {
         setIsBookmarked(!isBookmarked);
 
         try {
-            const res = await fetch(`http://127.0.0.1:8000/api/facts/feed/${fact.id}/bookmark/`, {
+            const res = await fetch(`http://127.0.0.1:8000/api/facts/feed/${fact.id}/is_bookmarked/`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -1,4 +1,3 @@
-// web/components/Feed.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,15 +12,22 @@ interface FeedProps {
 }
 
 export default function Feed({ apiEndpoint, title, emptyMessage = "No facts found." }: FeedProps) {
-  const { token } = useAuth();
+  // 1. Destructure isLoading (renamed to authLoading)
+  const { token, isLoading: authLoading } = useAuth();
   const [facts, setFacts] = useState<Fact[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 2. STOP if auth is still initializing
+    if (authLoading) return;
+
     const fetchFacts = async () => {
       setLoading(true);
       try {
         const headers: HeadersInit = { "Content-Type": "application/json" };
+
+        // Now we are guaranteed that if a token exists in storage,
+        // it is loaded into the state variable 'token' here.
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
         const res = await fetch(apiEndpoint, { headers, cache: "no-store" });
@@ -40,7 +46,18 @@ export default function Feed({ apiEndpoint, title, emptyMessage = "No facts foun
     };
 
     fetchFacts();
-  }, [token, apiEndpoint]);
+  }, [token, apiEndpoint, authLoading]); // 3. Add authLoading to dependencies
+
+  // 4. While Auth is initializing, you can show a skeleton or nothing
+  if (authLoading) {
+    return (
+      <div className="flex-1 max-w-2xl min-w-0">
+         <div className="space-y-4 mt-16">
+          {[1, 2].map((i) => <div key={i} className="h-48 bg-white rounded-2xl animate-pulse" />)}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 max-w-2xl min-w-0">

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface AuthContextType {
   user: string | null;
   token: string | null;
+  isLoading: boolean; // <--- ADD THIS
   login: (username: string, access: string, refresh: string) => void;
   logout: () => void;
 }
@@ -15,17 +16,15 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // <--- ADD THIS (Default true)
   const router = useRouter();
 
-  // Helper: Check if JWT is expired
   const isTokenExpired = (token: string) => {
     try {
-      // Decode the payload (2nd part of JWT)
       const payload = JSON.parse(atob(token.split('.')[1]));
-      // Check against current time (exp is in seconds)
       return payload.exp * 1000 < Date.now();
     } catch (e) {
-      return true; // Treat invalid tokens as expired
+      return true;
     }
   };
 
@@ -37,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (savedToken && savedUser && savedRefresh) {
         if (isTokenExpired(savedToken)) {
-          // Token is expired! Try to refresh it.
           try {
             const res = await fetch("http://127.0.0.1:8000/api/accounts/token/refresh/", {
               method: "POST",
@@ -47,10 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (res.ok) {
               const data = await res.json();
-              // Save new tokens
               login(savedUser, data.access, data.refresh || savedRefresh);
             } else {
-              // Refresh failed (e.g., refresh token also expired) -> Logout
               logout();
             }
           } catch (err) {
@@ -58,11 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             logout();
           }
         } else {
-          // Token is still valid -> Log them in immediately
           setToken(savedToken);
           setUser(savedUser);
         }
       }
+      setIsLoading(false); // <--- IMPORTANT: We are done checking
     };
 
     initAuth();
@@ -75,8 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("accessToken", access);
     localStorage.setItem("refreshToken", refresh);
     localStorage.setItem("username", username);
-    // Only redirect if explicitly logging in via form (not auto-refresh)
-    // You might want to handle router.push separately or conditionally here
+    // router.push("/"); // Optional
   };
 
   const logout = () => {
@@ -87,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    // Pass isLoading to the provider
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
