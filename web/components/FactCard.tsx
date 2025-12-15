@@ -13,10 +13,11 @@ export default function FactCard({ fact }: FactCardProps) {
 
   const [score, setScore] = useState(fact.score);
   const [voteStatus, setVoteStatus] = useState<"UP" | "DOWN" | null>(fact.user_vote);
+  // Initialize bookmark state from the prop
+  const [isBookmarked, setIsBookmarked] = useState(fact.is_bookmarked);
 
-  // --- NEW: Expansion Logic ---
+  // --- Expansion Logic ---
   const [isExpanded, setIsExpanded] = useState(false);
-  // We consider "Long Text" anything over 200 characters
   const isLongText = fact.content.length > 200;
 
   const handleVote = async (type: "UP" | "DOWN") => {
@@ -48,6 +49,35 @@ export default function FactCard({ fact }: FactCardProps) {
       setScore((prev) => prev - change);
       setVoteStatus(fact.user_vote);
       alert("Vote failed. Please try again.");
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!token) return alert("Please login to bookmark!");
+
+    // Optimistic Update (Instant feedback)
+    const previousState = isBookmarked;
+    setIsBookmarked(!isBookmarked);
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/facts/feed/${fact.id}/bookmark/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error();
+
+      // Ensure state matches server response
+      const data = await res.json();
+      setIsBookmarked(data.is_bookmarked);
+
+    } catch (err) {
+      // Revert if error
+      setIsBookmarked(previousState);
+      alert("Failed to bookmark. Please try again.");
     }
   };
 
@@ -87,20 +117,18 @@ export default function FactCard({ fact }: FactCardProps) {
           {fact.title}
         </h3>
 
-        {/* --- CONTENT AREA (The Magic Happens Here) --- */}
+        {/* --- CONTENT AREA --- */}
         <div className="relative">
           <div
             className={`text-gray-700 text-[15px] leading-7 transition-all duration-500 ease-in-out ${
               isExpanded ? "max-h-[1000px] opacity-100" : "max-h-24 overflow-hidden opacity-90"
             }`}
           >
-            {/* We map paragraphs to make it readable if there are newlines */}
             {fact.content.split('\n').map((paragraph, idx) => (
               <p key={idx} className="mb-3">{paragraph}</p>
             ))}
           </div>
 
-          {/* Gradient Overlay (Only show if collapsed and text is long) */}
           {!isExpanded && isLongText && (
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
           )}
@@ -126,6 +154,8 @@ export default function FactCard({ fact }: FactCardProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-6 mt-2 border-t border-gray-50">
+
+          {/* Left: Author Info */}
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-sm font-bold text-blue-600">
               {fact.author?.username?.[0].toUpperCase()}
@@ -140,36 +170,61 @@ export default function FactCard({ fact }: FactCardProps) {
             </div>
           </div>
 
-          {/* Voting */}
-          <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1 border border-gray-100">
+          {/* Right: Actions (Bookmark + Vote) */}
+          <div className="flex items-center gap-4">
+
+            {/* Bookmark Button */}
             <button
-              onClick={() => handleVote("UP")}
-              className={`p-2 rounded-lg transition-all active:scale-90 ${
-                voteStatus === "UP" ? "bg-white text-orange-500 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+              onClick={handleBookmark}
+              className={`p-2 rounded-full transition-colors ${
+                isBookmarked 
+                  ? "text-yellow-500 bg-yellow-50 hover:bg-yellow-100" 
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               }`}
+              title="Bookmark this fact"
             >
-              <svg className="w-5 h-5" fill={voteStatus === "UP" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+              <svg
+                className="w-6 h-6"
+                fill={isBookmarked ? "currentColor" : "none"}
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
             </button>
 
-            <span className={`text-sm font-bold w-8 text-center ${
-              score > 0 ? "text-gray-900" : "text-gray-500"
-            }`}>
-              {score}
-            </span>
+            {/* Vote Buttons */}
+            <div className="flex items-center bg-gray-50 rounded-xl p-1 gap-1 border border-gray-100">
+              <button
+                onClick={() => handleVote("UP")}
+                className={`p-2 rounded-lg transition-all active:scale-90 ${
+                  voteStatus === "UP" ? "bg-white text-orange-500 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="w-5 h-5" fill={voteStatus === "UP" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
 
-            <button
-              onClick={() => handleVote("DOWN")}
-              className={`p-2 rounded-lg transition-all active:scale-90 ${
-                voteStatus === "DOWN" ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              <svg className="w-5 h-5" fill={voteStatus === "DOWN" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+              <span className={`text-sm font-bold w-8 text-center ${
+                score > 0 ? "text-gray-900" : "text-gray-500"
+              }`}>
+                {score}
+              </span>
+
+              <button
+                onClick={() => handleVote("DOWN")}
+                className={`p-2 rounded-lg transition-all active:scale-90 ${
+                  voteStatus === "DOWN" ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <svg className="w-5 h-5" fill={voteStatus === "DOWN" ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

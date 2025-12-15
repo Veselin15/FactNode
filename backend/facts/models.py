@@ -124,3 +124,15 @@ class FactSource(models.Model):
 
     def __str__(self):
         return self.url
+
+
+class Bookmark(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookmarks')
+    fact = models.ForeignKey(Fact, on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'fact')  # Prevent duplicate bookmarks
+
+    def __str__(self):
+        return f"{self.user} bookmarked {self.fact}"

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Fact, Category, FactSource
+from .models import Fact, Category, FactSource, Bookmark
 from accounts.models import CustomUser
 from reputation.models import Vote
 
@@ -50,13 +50,14 @@ class FactSerializer(serializers.ModelSerializer):
 
     image = serializers.ImageField(required=False, allow_null=True)
     user_vote = serializers.SerializerMethodField()
+    is_bookmarked = serializers.SerializerMethodField()
 
     class Meta:
         model = Fact
         fields = [
             'id', 'title', 'slug', 'content', 'image',
             'category', 'category_id','author', 'sources',
-            'score','user_vote', 'created_at', 'status'
+            'score','user_vote', 'created_at', 'status', "is_bookmarked"
         ]
         read_only_fields = ['status', 'slug', 'approved_at', 'created_at']
 
@@ -79,3 +80,9 @@ class FactSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         fact = Fact.objects.create(author=user, **validated_data)
         return fact
+
+    def get_is_bookmarked(self, obj):
+        user = self.context.get('request').user
+        if user.is_authenticated:
+            return Bookmark.objects.filter(user=user, fact=obj).exists()
+        return False
