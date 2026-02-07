@@ -136,3 +136,16 @@ class Bookmark(models.Model):
 
     def __str__(self):
         return f"{self.user} bookmarked {self.fact}"
+class Comment(models.Model):
+    """
+    Represents a user review or discussion on a fact.
+    """
+    fact = models.ForeignKey(Fact, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField(max_length=1000)
+    # Allows for nested replies (optional, but good for discussions)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.author.username} on {self.fact.title}"
