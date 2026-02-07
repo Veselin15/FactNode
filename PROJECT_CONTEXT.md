@@ -1,11 +1,27 @@
-# 📂 FACTNODE: Master Project Context (v2)
+# 📂 FACTNODE: Master Project Context (v3)
 
 ## 1. Project Vision
 FactNode is a cross-platform (Web & Mobile) application where users consume bite-sized knowledge (facts), engage with a community (vote, comment, review), and gamify their learning process.
     Core Loop: Scroll -> Read -> Rate/Review -> Earn Reputation -> Rank Up
     Architecture: Django (Backend) + Next.js (Web) + React Native (Mobile)
 
-## 2. Tech Stack
+## 2. Ideas & Features
+    Core Experience
+        Infinite Fact Scroll: A vertical feed of bite-sized learning content (TikTok/Reddit style)
+        Reputation System: Users earn XP and Ranks (Novice -> Professor) for contributions
+        Community Verification: Upvotes/Downvotes and "Verified Source" ticks quality control the content
+        Discussion Threads: Nested comments for debating facts and adding context
+    Learning & Engagement
+        Daily Question: A daily challenge or featured fact to maintain user streaks
+        Quizzes: Interactive sets of questions linked to specific categories (Planned)
+        "Did I Learn?": Quick pop-up tests after scrolling to reinforce memory
+        Spaced Repetition: Resurfacing bookmarked facts days later to improve retention
+    Future Concepts
+        Fact Battles: Side-by-side comparison of conflicting theories or Myth vs. Reality
+        Audio Mode: Text-to-speech for listening to facts on the go
+        AI Simplification: "Explain Like I'm 5" button for complex scientific facts
+
+## 3. Tech Stack
     Backend: Django 5 + DRF
         Auth: SimpleJWT
         Database: SQLite (Dev) / PostgreSQL (Prod)
@@ -15,7 +31,7 @@ FactNode is a cross-platform (Web & Mobile) application where users consume bite
 
 ---
 
-## 3. Data Architecture Status
+## 4. Data Architecture Status
     Implemented Models:
         [x] User
         [x] Profile
@@ -29,7 +45,7 @@ FactNode is a cross-platform (Web & Mobile) application where users consume bite
 
 ---
 
-## 4. Development Roadmap
+## 5. Development Roadmap
 
 ### Phase 1: Foundation (Done)
     [x] Basic CRUD for Facts
@@ -54,7 +70,7 @@ FactNode is a cross-platform (Web & Mobile) application where users consume bite
 
 ---
 
-## 5. Current Immediate To-Do List
+## 6. Current Immediate To-Do List
 (This is what we work on right now)
 
     [x] Fix Bookmark URL: (Completed)
