@@ -24,7 +24,7 @@ FactNode is a cross-platform (Web & Mobile) application where users consume bite
 ## 3. Tech Stack
     Backend: Django 5 + DRF
         Auth: SimpleJWT
-        Database: SQLite (Dev) / PostgreSQL (Prod)
+        Database: PostgreSQL
     Web: Next.js 15 (App Router) + Tailwind CSS v4
     Mobile: React Native (Expo) - Planned Phase 4
     DevOps: Docker Compose
